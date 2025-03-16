@@ -7,7 +7,7 @@
 # passwords, and login tokens.
 #
 # Authors:
-#   << YOUR NAME >>
+#   Matthew Khoriaty
 #
 #   Prof. Joe Hummel (initial template)
 #   Northwestern University
@@ -242,7 +242,7 @@ def users(baseurl):
 #
 # jobs
 #
-def jobs(baseurl):
+def jobs(baseurl, token):
   """
   Prints out all the jobs in the database
 
@@ -254,35 +254,51 @@ def jobs(baseurl):
   -------
   nothing
   """
-
   try:
+    if token is None:
+      print("No current token, please login")
+      return
     #
     # call the web service:
     #
     api = '/jobs'
     url = baseurl + api
 
+    req_header = {"Authentication": token}
+
     #
     # make request:
     #
-    # res = requests.get(url)
-    res = web_service_get(url)
-
+    res = requests.get(url, headers=req_header)
+    # res = web_service_get(url)
+    # print(res)
+    # import pdb;pdb.set_trace()
     #
     # let's look at what we got back:
     #
     if res.status_code == 200: #success
       pass
-    else:
-      # failed:
-      print("**ERROR: failed with status code:", res.status_code)
-      print("url: " + url)
-      if res.status_code == 500:
-        # we'll have an error message
-        body = res.json()
-        print("Error message:", body)
-      #
+    elif res.status_code == 401:
+      body = res.json()
+      print(body)
       return
+    elif res.status_code in {400, 500}:
+      print("**ERROR:")
+      print(res.json())
+      return
+    else:
+      print("**ERROR:", res.status_code)
+      return
+    # else:
+    #   # failed:
+    #   print("**ERROR: failed with status code:", res.status_code)
+    #   print("url: " + url)
+    #   if res.status_code == 500:
+    #     # we'll have an error message
+    #     body = res.json()
+    #     print("Error message:", body)
+    #   #
+    #   return
 
     #
     # deserialize and extract jobs:
@@ -857,7 +873,7 @@ try:
     if cmd == 1:
       users(baseurl)
     elif cmd == 2:
-      jobs(baseurl)
+      jobs(baseurl, token=token)
     elif cmd == 3:
       reset(baseurl)
     elif cmd == 4:
